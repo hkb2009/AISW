@@ -107,3 +107,21 @@ start=function(i){renderLives();if(getLives()<=0){gameOver();return;}baseStart(i
 $('failRetry').onclick=()=>{if(getLives()<=0){nextPlayer();return;}reset();};
 renderLives();setInterval(renderLives,1000); // 참가자 등록 후에도 목숨 표시를 맞춥니다
 if(getLives()<=0)setTimeout(()=>{if(window.ScoreLink&&ScoreLink.player())gameOver();},0);
+
+// ─────────────────────────────────────────────
+// 마지막 부스: 열쇠 미션이 끝나면 세 게임 총점을 크게 보여 줍니다.
+// ─────────────────────────────────────────────
+function showTotal(boxId){
+  const box=$(boxId);if(!box||!window.ScoreLink||!ScoreLink.summary)return;
+  box.hidden=false;box.innerHTML='<div class="total-label">최종 점수 계산 중…</div><div class="total-num">···</div>';
+  ScoreLink.summary().then(s=>{
+    if(!s){box.hidden=true;return;}
+    const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    box.innerHTML=`<div class="total-label">🏆 ${esc(s.name)}님의 최종 점수</div><div class="total-num">${s.total}<small> / ${s.max}</small></div>`+
+      `<div class="total-rows">${s.games.map(g=>`<span>${g.name} <b>${typeof g.score==='number'?g.score:0}</b></span>`).join('')}</div>`;
+  }).catch(()=>{box.innerHTML='<div class="total-label">점수를 불러오지 못했어요. 오른쪽 아래 배지에서 확인해 주세요.</div>';});
+}
+const baseEndStage=endStage;
+endStage=function(){baseEndStage();if(!$('final').classList.contains('hidden'))showTotal('finalTotal');};
+const baseGameOver=gameOver;
+gameOver=function(){baseGameOver();showTotal('failTotal');};
