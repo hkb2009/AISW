@@ -7,7 +7,7 @@
 'use strict';
 
 // ★ 관리자 설정 ① : Apps Script 웹 앱 주소를 따옴표 안에 붙여 넣으세요. (README.md 참고)
-var API_URL = window.SCORE_API_URL || '';
+var API_URL = window.SCORE_API_URL || 'https://script.google.com/macros/s/AKfycbxMFw_v1CJVf6e4vlmUZG72A0bURUsCvtuaMS20U26bLWSRPIfE2JyKpaYv2KZ9r8PA/exec';
 
 // ★ 관리자 설정 ② : 연동 점수 배점 (총 1000점). 바꾸면 apps-script/Code.gs 의 max 도 같이 바꾸세요.
 //  rawMax = 게임 안에서 나오는 최고 점수, max = 연동 점수 만점
