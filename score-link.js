@@ -12,9 +12,9 @@ var API_URL = window.SCORE_API_URL || 'https://script.google.com/macros/s/AKfycb
 // ★ 관리자 설정 ② : 연동 점수 배점 (총 1000점). 바꾸면 apps-script/Code.gs 의 max 도 같이 바꾸세요.
 //  rawMax = 게임 안에서 나오는 최고 점수, max = 연동 점수 만점
 var GAMES = {
-  cipher: {name:'암호 풀기', rawMax:500, max:400},  // 게임 점수 × 0.8
-  key:    {name:'열쇠 미션', rawMax:300, max:300},  // 성공한 단계 × 100
-  ox:     {name:'OX 퀴즈',   rawMax:300, max:300}   // 맞힌 문제 × 100
+  cipher: {name:'암호 풀기', rawMax:500, max:500},  // 문제당 100점, 힌트 사용 시 20점 감점
+  key:    {name:'열쇠 미션', rawMax:200, max:200},  // 상·중·하 중 아무 단계나 하나 깨면 200점
+  ox:     {name:'OX 퀴즈',   rawMax:300, max:300}   // 맞힌 문제당 100점
 };
 
 // ★ 관리자 설정 ③ : 이 시간(분) 동안 아무 조작이 없으면 자동으로 다음 참가자 화면으로 돌아갑니다. 0이면 끄기
