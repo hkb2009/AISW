@@ -47,6 +47,7 @@ function move(e){if(!drawing||failed)return;const p=point(e),line=paths.at(-1),a
 function release(e){if(!drawing)return;if(e&&e.type==='pointerup')move(e);drawing=false;}
 function endStage(){
   stopTimer();paint();
+  if(window.ScoreLink)ScoreLink.record('key',(selected+1)*100); // 점수 연동: 깬 단계 × 100점
   if(selected<targetLevel){
     start(selected+1);
   }else{
