@@ -99,7 +99,7 @@ function buildQuestions(version){
 }
 
 // 점수 기준
-const PASS_SCORE=350, HINT_PENALTY=10;
+const PASS_SCORE=350, HINT_PENALTY=20;
 
 const versions={easy:{label:'하',audience:'초등학생용',stars:3,time:null,title:'암호 탐험가'},medium:{label:'중',audience:'중·고등학생용',stars:4,time:300,title:'보안 분석가'},hard:{label:'상',audience:'대학생용',stars:5,time:300,title:'암호 해독 마스터'}};
 const screen=document.getElementById('screen'),hud=document.getElementById('hud');
@@ -111,7 +111,7 @@ function stopTimer(){if(timer!==null)clearInterval(timer);timer=null;}
 function resetScreen(){screen.classList.remove('intro-panel','result-fail','result-success','shake');}
 
 function menu(){stopTimer();game=null;hud.hidden=true;document.body.classList.remove('playing');resetScreen();
- screen.innerHTML=`<div class="eyebrow">SELECT GAME VERSION</div><h2>도전할 버전을 선택하세요</h2><p class="desc">순서 맞추기·논리 추론·도형 암호·이진수·넌센스 문제가 랜덤으로 5문제 출제됩니다. (하 버전은 이진수 대신 넌센스 2문제) 문제당 100점, 힌트를 쓰면 10점이 깎이며 <strong>350점 이상이면 성공</strong>입니다. 오답도 풀이를 확인한 뒤 계속 진행할 수 있어요.</p><div class="levels">${Object.entries(versions).map(([key,v])=>`<button class="level" data-version="${key}"><b>${v.label}</b><div class="stars" aria-label="별 ${v.stars}개">${'★'.repeat(v.stars)}</div><small>5문제 랜덤 출제 · ${v.time?'제한 시간 5분':'시간 제한 없음'} · 문제마다 힌트 1회</small></button>`).join('')}</div>`;
+ screen.innerHTML=`<div class="eyebrow">SELECT GAME VERSION</div><h2>도전할 버전을 선택하세요</h2><p class="desc">순서 맞추기·논리 추론·도형 암호·이진수·넌센스 문제가 랜덤으로 5문제 출제됩니다. (하 버전은 이진수 대신 넌센스 2문제) 문제당 100점, 힌트를 쓰면 ${HINT_PENALTY}점이 깎이며 <strong>350점 이상이면 성공</strong>입니다. 오답도 풀이를 확인한 뒤 계속 진행할 수 있어요.</p><div class="levels">${Object.entries(versions).map(([key,v])=>`<button class="level" data-version="${key}"><b>${v.label}</b><div class="stars" aria-label="별 ${v.stars}개">${'★'.repeat(v.stars)}</div><small>5문제 랜덤 출제 · ${v.time?'제한 시간 5분':'시간 제한 없음'} · 문제마다 힌트 1회</small></button>`).join('')}</div>`;
  screen.querySelectorAll('[data-version]').forEach(b=>b.onclick=()=>start(b.dataset.version));}
 
 function start(version){stopTimer();document.body.classList.remove('intro-mode');document.body.classList.add('playing');resetScreen();
