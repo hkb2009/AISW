@@ -38,7 +38,17 @@ function esc(s){ return String(s).replace(/[&<>"']/g, function(c){ return {'&':'
 function player(){ return store(K_PLAYER); }
 function cacheOf(id){ var all = store(K_CACHE) || {}; return all[id] || {scores:{}}; }
 function totalOf(scores){ var t = 0; ORDER.forEach(function(g){ if (typeof scores[g] === 'number') t += scores[g]; }); return t; }
-// 서버 기록과 이 기기의 기록 중 게임별로 높은 점수를 남깁니다.
+// 서버(스프레드시트)를 기준으로 이 기기의 기록을 맞춥니다.
+// 시트에서 줄을 지우면 게임 화면에서도 초기화됩니다. (아직 못 보낸 점수만 더해서 보여 줌)
+function setFromServer(id, scores){
+  var all = store(K_CACHE) || {}, c = {scores:{}};
+  ORDER.forEach(function(g){ if (scores && typeof scores[g] === 'number') c.scores[g] = scores[g]; });
+  all[id] = c; store(K_CACHE, all);
+  var pend = {};
+  (store(K_QUEUE) || []).forEach(function(x){ if (idOf(x.name, x.pin) === id && !(pend[x.game] >= x.score)) pend[x.game] = x.score; });
+  return mergeCache(id, pend);
+}
+// 이 기기의 기록에 게임별로 높은 점수를 남깁니다.
 function mergeCache(id, scores){
   var all = store(K_CACHE) || {}, c = all[id] || {scores:{}};
   ORDER.forEach(function(g){
@@ -67,7 +77,7 @@ function flush(){
   apiPost(item).then(function(res){
     flushing = false; lastError = '';
     store(K_QUEUE, (store(K_QUEUE) || []).filter(function(x){ return x.rid !== item.rid; }));
-    if (res && res.ok && res.player) mergeCache(res.player.id, res.player.scores);
+    if (res && res.ok && res.player) setFromServer(res.player.id, res.player.scores);
     else if (res && res.error) lastError = '서버가 기록을 거절했어요: ' + res.error;
     draw(); flush();
   }).catch(function(){ flushing = false; lastError = '서버에 연결할 수 없어요. 자동으로 다시 보냅니다.'; draw(); });
@@ -123,17 +133,31 @@ function logout(ask){
   if (ask && !confirm('다음 참가자로 바꿀까요?\n지금 참가자의 점수는 이미 저장되어 있어요.')) return;
   store(K_PLAYER, null); location.reload();
 }
+// 서버에서 이 참가자의 기록을 가져옵니다. 실패하면 최대 3번까지 다시 시도합니다.
+function fetchPlayer(p, tries){
+  return apiGet({action:'get', name:p.name, pin:p.pin}).then(function(res){
+    if (!res || res.ok === false) throw new Error(res && res.error || '응답 오류');
+    return setFromServer(p.id, res.player ? res.player.scores : {});
+  }).catch(function(err){
+    if (tries > 1) return new Promise(function(r){ setTimeout(r, 1500); }).then(function(){ return fetchPlayer(p, tries - 1); });
+    throw err;
+  });
+}
 function login(name, pin){
   var p = {id:idOf(name, pin), name:cleanName(name), pin:pin};
-  store(K_PLAYER, p); overlay.hidden = true; draw();
-  if (!online()) { toast(esc(p.name) + '님 환영합니다! (서버 주소가 없어 이 기기에만 저장돼요)', 'bad'); return; }
-  toast(esc(p.name) + '님 기록을 불러오는 중…');
-  apiGet({action:'get', name:p.name, pin:pin}).then(function(res){
-    var c = mergeCache(p.id, res && res.player ? res.player.scores : {});
+  store(K_PLAYER, p); draw();
+  if (!online()) { overlay.hidden = true; toast(esc(p.name) + '님 환영합니다! (서버 주소가 없어 이 기기에만 저장돼요)', 'bad'); return; }
+  // 기록을 다 불러올 때까지 등록 창을 닫지 않습니다. (불러오기 전에 0점으로 보이는 것 방지)
+  var btn = overlay.querySelector('button[type=submit]');
+  btn.disabled = true; btn.textContent = '기록 불러오는 중…';
+  fetchPlayer(p, 3).then(function(c){
     var has = Object.keys(c.scores).length;
     toast(esc(p.name) + '님 ' + (has ? '이어서 진행합니다! 현재 총점 <b>' + totalOf(c.scores) + ' / ' + TOTAL_MAX + '</b>' : '환영합니다! 첫 기록을 시작해요.'), 'good');
-    draw();
-  }).catch(function(){ toast('서버 연결이 안 돼요. 점수는 이 기기에 보관했다가 연결되면 보냅니다.', 'bad'); });
+  }).catch(function(err){
+    toast('기록을 불러오지 못했어요 (' + esc(err && err.message || '연결 오류') + ').<br>점수는 정상 저장되며, 총점 표시는 나중에 맞춰집니다.', 'bad');
+  }).then(function(){
+    overlay.hidden = true; btn.disabled = false; btn.textContent = '시작하기 →'; draw();
+  });
   flush();
 }
 
@@ -196,6 +220,7 @@ function mount(){
 
   document.body.appendChild(overlay); document.body.appendChild(badge); document.body.appendChild(toastEl);
   if (!player()) showLogin();
+  else if (online()) fetchPlayer(player(), 2).then(draw, function(){});  // 새로고침해도 다른 기기 점수까지 맞춥니다
   draw(); flush();
 
   if (IDLE_MINUTES > 0) {
@@ -209,6 +234,21 @@ document.addEventListener('keydown', function(e){
   if (overlay && !overlay.hidden && !overlay.contains(e.target)) e.stopImmediatePropagation();
 }, true);
 
-window.ScoreLink = {record:record, player:player, logout:function(){ logout(true); }};
+// 최종 점수: 보내는 중인 점수가 서버에 다 들어갈 때까지(최대 10초) 기다린 뒤 서버 기준 총점을 돌려줍니다.
+function summary(){
+  var p = player();
+  if (!p) return Promise.resolve(null);
+  var until = Date.now() + 10000;
+  function mine(){ return (store(K_QUEUE) || []).some(function(x){ return idOf(x.name, x.pin) === p.id; }); }
+  return new Promise(function(done){
+    (function wait(){ flush(); if (!mine() || Date.now() > until) done(); else setTimeout(wait, 400); })();
+  }).then(function(){
+    return online() ? fetchPlayer(p, 2).catch(function(){ return cacheOf(p.id); }) : cacheOf(p.id);
+  }).then(function(c){
+    return {name:p.name, total:totalOf(c.scores), max:TOTAL_MAX, scores:c.scores,
+            games:ORDER.map(function(g){ return {id:g, name:GAMES[g].name, max:GAMES[g].max, score:c.scores[g]}; })};
+  });
+}
+window.ScoreLink = {record:record, player:player, summary:summary, logout:function(){ logout(true); }};
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount); else mount();
 })();
