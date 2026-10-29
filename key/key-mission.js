@@ -68,3 +68,42 @@ choices();canvas.addEventListener('pointerdown',begin);canvas.addEventListener('
 $('failRetry').onclick=reset;
 // 다음 참가자: 점수는 이미 저장되어 있으므로 바로 참가자 등록 화면으로 돌아갑니다.
 $('finalNext').onclick=()=>{try{localStorage.removeItem('sl_player_v2');}catch(e){}location.reload();};
+
+// ─────────────────────────────────────────────
+// 목숨 3개: 하·중·상 어느 열쇠든 실패할 때마다 1개씩 줄고, 다 쓰면 더 도전할 수 없습니다.
+// 참가자별로 기억합니다 (새로고침해도 유지, '다음 참가자'로 바뀌면 새 참가자는 3개로 시작).
+// ─────────────────────────────────────────────
+const MAX_LIVES=3;
+function livesKey(){const p=window.ScoreLink&&ScoreLink.player&&ScoreLink.player();return 'key_lives_'+(p?p.id:'guest');}
+function getLives(){try{const v=localStorage.getItem(livesKey());return v===null?MAX_LIVES:Math.max(0,+v);}catch(e){return MAX_LIVES;}}
+function setLives(n){try{localStorage.setItem(livesKey(),String(Math.max(0,n)));}catch(e){}renderLives();}
+function renderLives(){const n=getLives(),t='목숨 '+'❤️'.repeat(n)+'🖤'.repeat(MAX_LIVES-n);$('lives').textContent=t;$('livesSelect').textContent=t;}
+function nextPlayer(){try{localStorage.removeItem('sl_player_v2');}catch(e){}location.reload();}
+function gameOver(){
+  stopTimer();drawing=false;failed=true;renderLives();
+  $('failTitle').textContent='게임 오버!';
+  $('failDesc').textContent='목숨 3개를 모두 사용했습니다. 열쇠 미션은 여기까지예요. 수고하셨습니다!';
+  $('failRetry').textContent='다음 참가자 →';$('failRetry').onclick=nextPlayer;
+  $('failOverlay').classList.remove('hidden');$('failRetry').focus();
+}
+// 실패하면 목숨 1개 차감
+const baseFail=fail;
+fail=function(reason){
+  if(failed)return;
+  baseFail(reason);
+  const left=getLives()-1;setLives(left);
+  if(left<=0){gameOver();return;}
+  $('failTitle').textContent='미션 실패!';
+  $('failDesc').textContent=$('failDesc').textContent+` (남은 목숨 ${left}개)`;
+};
+// 그리던 중에 '다시 그리기'나 '열쇠 선택'을 누르면 실패로 보고 목숨 1개 차감 (시간 초과 피하기 방지)
+function attemptRunning(){return !failed&&paths.length>0&&!$('play').classList.contains('hidden');}
+$('retry').onclick=()=>{if(attemptRunning()){fail('도중에 다시 그리기를 눌렀습니다.');return;}reset();};
+const baseBack=$('back').onclick;
+$('back').onclick=()=>{if(attemptRunning()){fail('도중에 열쇠 선택으로 나갔습니다.');return;}baseBack();};
+// 목숨이 없으면 시작할 수 없음
+const baseStart=start;
+start=function(i){renderLives();if(getLives()<=0){gameOver();return;}baseStart(i);};
+$('failRetry').onclick=()=>{if(getLives()<=0){nextPlayer();return;}reset();};
+renderLives();setInterval(renderLives,1000); // 참가자 등록 후에도 목숨 표시를 맞춥니다
+if(getLives()<=0)setTimeout(()=>{if(window.ScoreLink&&ScoreLink.player())gameOver();},0);
