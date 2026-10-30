@@ -125,3 +125,26 @@ const baseEndStage=endStage;
 endStage=function(){baseEndStage();if(!$('final').classList.contains('hidden'))showTotal('finalTotal');};
 const baseGameOver=gameOver;
 gameOver=function(){baseGameOver();showTotal('failTotal');};
+
+// ─────────────────────────────────────────────
+// 시간은 초록 시작점을 처음 누르는 순간부터 흐릅니다.
+// (열쇠를 고르거나 다시 그리기를 누르면 시간이 멈춘 채로 기다립니다)
+// ─────────────────────────────────────────────
+const START_RADIUS=26;
+let timerArmed=false;
+restartTimer=function(){
+  stopTimer();timerArmed=false;timeLeft=ROUND_SECONDS[selected];
+  $('timer').classList.remove('warning','urgent');
+  $('timer').textContent=`⏱ ${timeLeft}초 · 초록 시작점을 누르세요`;
+};
+function armTimer(){timerArmed=true;deadline=performance.now()+ROUND_SECONDS[selected]*1000;tickTimer();timerId=setInterval(tickTimer,100);}
+canvas.parentElement.addEventListener('pointerdown',e=>{
+  if(e.target!==canvas||timerArmed||failed||$('play').classList.contains('hidden'))return;
+  if(dist(point(e),stages[selected].pts[0])>START_RADIUS){
+    // 시작 전에는 초록 시작점이 아니면 무시 (목숨도 줄지 않음)
+    e.stopPropagation();e.preventDefault();
+    $('timer').textContent='⏱ 초록 시작점부터 눌러 주세요!';
+    return;
+  }
+  armTimer(); // 초록 시작점을 눌렀을 때 시간 시작 → 이어서 원래 그리기 시작
+},true);
