@@ -111,7 +111,7 @@ function stopTimer(){if(timer!==null)clearInterval(timer);timer=null;}
 function resetScreen(){screen.classList.remove('intro-panel','result-fail','result-success','shake');}
 
 function menu(){stopTimer();game=null;hud.hidden=true;document.body.classList.remove('playing');resetScreen();
- screen.innerHTML=`<div class="eyebrow">SELECT GAME VERSION</div><h2>도전할 버전을 선택하세요</h2><p class="desc">순서 맞추기·논리 추론·도형 암호·이진수·넌센스 문제가 랜덤으로 5문제 출제됩니다. (하 버전은 이진수 대신 넌센스 2문제) 문제당 100점, 힌트를 쓰면 ${HINT_PENALTY}점이 깎이며 <strong>350점 이상이면 성공</strong>입니다. 오답도 풀이를 확인한 뒤 계속 진행할 수 있어요.</p><div class="levels">${Object.entries(versions).map(([key,v])=>`<button class="level" data-version="${key}"><b>${v.label}</b><div class="stars" aria-label="별 ${v.stars}개">${'★'.repeat(v.stars)}</div><small>5문제 랜덤 출제 · ${v.time?'제한 시간 5분':'시간 제한 없음'} · 문제마다 힌트 1회</small></button>`).join('')}</div>`;
+ screen.innerHTML=`<div class="eyebrow">SELECT GAME VERSION</div><h2>도전할 버전을 선택하세요</h2><p class="desc">순서 맞추기·논리 추론·도형 암호·이진수·넌센스 문제가 랜덤으로 5문제 출제됩니다. (하 버전은 이진수 대신 넌센스 2문제) 문제당 100점, 힌트를 쓰면 ${HINT_PENALTY}점이 깎이며 <strong>맞힌 만큼 점수가 쌓입니다</strong>. 오답도 풀이를 확인한 뒤 계속 진행할 수 있어요.</p><div class="levels">${Object.entries(versions).map(([key,v])=>`<button class="level" data-version="${key}"><b>${v.label}</b><div class="stars" aria-label="별 ${v.stars}개">${'★'.repeat(v.stars)}</div><small>5문제 랜덤 출제 · ${v.time?'제한 시간 5분':'시간 제한 없음'} · 문제마다 힌트 1회</small></button>`).join('')}</div>`;
  screen.querySelectorAll('[data-version]').forEach(b=>b.onclick=()=>start(b.dataset.version));}
 
 function start(version){stopTimer();document.body.classList.remove('intro-mode');document.body.classList.add('playing');resetScreen();
@@ -143,14 +143,14 @@ function submit(value){if(!game||game.locked)return;const q=game.questions[game.
 // 결과 화면: 모두 맞히면 성공, 하나라도 틀리거나 시간이 끝나면 실패.
 // 버튼은 프로그램 첫 화면으로 돌아가는 버튼 하나만 둡니다.
 function finish(expired){if(!game)return;stopTimer();const g=game,v=versions[g.version],elapsed=Math.floor((Date.now()-g.started)/1000),total=g.questions.length;
- // 350점 이상이면 성공
- const success=g.points>=PASS_SCORE;
+ // 성공·실패 없이 얻은 점수를 보여 줍니다
+ const success=true;
  if(window.ScoreLink)ScoreLink.record('cipher',g.points); // 점수 연동
  hud.hidden=true;resetScreen();screen.classList.add(success?'result-success':'result-fail');
  const summary=`<div class="summary"><div>정답 수<strong>${g.correct} / ${total}</strong></div><div>점수<strong>${g.points} / ${total*100}</strong></div><div>소요 시간<strong>${clock(elapsed)}</strong></div></div>`;
  const homeBtn=`<div class="actions result-actions"><button class="btn ${success?'':'retry'}" id="toStart">처음으로 →</button><button class="btn" id="toNext">다음 참가자 →</button></div>`;
  if(success){
-  screen.innerHTML=`<div class="eyebrow">MISSION COMPLETE</div><div class="door" id="door"><div></div><div></div></div><h2 class="granted">ACCESS GRANTED · 해킹 방어 성공!</h2><p class="desc">${total}문제 중 ${g.correct}문제를 맞혀 ${g.points}점을 얻었습니다! 해킹을 막을 보안 지식을 충분히 갖추고 있어요.</p><h2>${v.label} 버전 · ${v.title}</h2>${summary}${homeBtn}`;
+  screen.innerHTML=`<div class="eyebrow">${expired?'TIME UP · 점검 종료':'MISSION COMPLETE · 점검 완료'}</div><div class="door" id="door"><div></div><div></div></div><h2 class="granted">획득 점수 ${g.points}점</h2><p class="desc">${expired?'제한 시간이 끝났습니다. ':''}${total}문제 중 ${g.correct}문제를 맞혀 ${g.points}점을 얻었습니다! 수고하셨어요.</p><h2>${v.label} 버전 · ${v.title}</h2>${summary}${homeBtn}`;
   setTimeout(()=>$('door')?.classList.add('open'),100);
  }else{
   const reason=`${expired?'제한 시간이 끝났습니다. ':''}${total}문제 중 ${g.correct}문제를 맞혀 ${g.points}점을 얻었습니다.`;
