@@ -34,7 +34,9 @@ const caesarBank = [
 const shapeBank = {
  easy:[
   Q('[도형 암호] 도형 문자 해독\n대응표: ▲ = A  /  ● = B  /  ■ = C  /  ◆ = D  /  ★ = E  /  ♥ = F\n암호: ■ ▲ ♥ ★','CAFE','■는 C, ▲는 A, ♥는 F, ★는 E이므로 CAFE(카페)입니다.','각 기호를 대응표에서 찾아 왼쪽부터 읽으세요.'),
-  Q('[도형 암호] 로봇의 기호 언어\n대응표: ☀ = M  /  ☂ = N  /  ☾ = O  /  ♠ = P  /  ♣ = Q  /  ♫ = R\n암호: ☀ ☾ ☾ ☂','MOON','☀는 M, ☾는 O, ☾는 O, ☂는 N이므로 MOON(달)입니다.','네 기호를 차례로 알파벳으로 바꾸세요.')
+  Q('[도형 암호] 로봇의 기호 언어\n대응표: ☀ = M  /  ☂ = N  /  ☾ = O  /  ♠ = P  /  ♣ = Q  /  ♫ = R\n암호: ☀ ☾ ☾ ☂','MOON','☀는 M, ☾는 O, ☾는 O, ☂는 N이므로 MOON(달)입니다.','네 기호를 차례로 알파벳으로 바꾸세요.'),
+  Q('[도형 암호] 도서관의 비밀 기호\n대응표: ▲ = B  /  ● = O  /  ■ = K  /  ◆ = S  /  ★ = A  /  ♥ = L\n암호: ▲ ● ● ■','BOOK','▲는 B, ●는 O, ●는 O, ■는 K이므로 BOOK(책)입니다.','같은 기호는 같은 글자예요. 각 기호를 대응표에서 찾아 왼쪽부터 읽으세요.'),
+  Q('[도형 암호] 바닷속 기호 메시지\n대응표: ☀ = F  /  ☂ = I  /  ☾ = S  /  ♠ = H  /  ♣ = T  /  ♫ = E\n암호: ☀ ☂ ☾ ♠','FISH','☀는 F, ☂는 I, ☾는 S, ♠는 H이므로 FISH(물고기)입니다.','각 기호를 대응표에서 찾아 왼쪽부터 읽으세요.')
  ],
  medium:[
   Q('[도형 암호] 도형의 꼭짓점 암호\n규칙: 도형의 꼭짓점 수를 알파벳 순서로 바꿉니다. (A=1, B=2, C=3 … Z=26)\n대응표: △ = 3 = C  /  □ = 4 = D  /  ⬠ = 5 = E  /  ⬡ = 6 = F\n암호: ⬡ ⬠ ⬠ □','FEED','⬡는 꼭짓점 6개라서 F, ⬠는 5개라서 E, □는 4개라서 D입니다. 따라서 FEED(먹이를 주다)입니다.','꼭짓점 5개는 E, 6개는 F입니다.'),
@@ -75,6 +77,12 @@ const nonsenseBank = [
  Q('[넌센스] 가장 뜨거운 과일은?','천도복숭아','천도(1000℃)처럼 뜨거운 복숭아, 천도복숭아예요.','아주 높은 온도를 숫자로 떠올려 보세요.')
 ];
 
+// 하 버전 넌센스 추가 문제
+const nonsenseEasyExtra = [
+ Q('[넌센스] 바나나가 웃으면?','바나나킥','바나나가 ‘킥킥’ 웃으면 바나나킥!','웃는 소리 ‘킥킥’을 붙여 보세요.'),
+ Q('[넌센스] 딸기가 직장을 잃으면?','딸기시럽','직장을 잃는 것을 ‘실업’이라고 해요. 딸기 + 실업 → 딸기시럽!','직장을 잃는 걸 ‘○○’이라고 해요. 소리가 비슷한 달콤한 것을 떠올려 보세요.',{accept:['딸기실업']})
+];
+
 const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
 const pick=items=>items[Math.floor(Math.random()*items.length)];
 
@@ -84,7 +92,7 @@ const byLevel={
  logic:{easy:caesarBank.slice(0,2),medium:caesarBank.slice(2,4),hard:caesarBank.slice(4,6)},
  shape:shapeBank,
  binary:binaryBank,
- nonsense:{easy:nonsenseBank.slice(0,4),medium:nonsenseBank.slice(4,8),hard:nonsenseBank.slice(8,11)}
+ nonsense:{easy:[...nonsenseBank.slice(0,4),...nonsenseEasyExtra],medium:nonsenseBank.slice(4,8),hard:nonsenseBank.slice(8,11)}
 };
 
 // 버전별 출제 구성 (총 5문제)
