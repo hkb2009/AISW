@@ -1,6 +1,6 @@
 // ─────────────────────────────────────────────
 // 문제 은행: 5개 유형
-// 1. 순서 맞추기  2. 논리 추론  3. 도형 암호  4. 이진수  5. 넌센스
+// 1. 순서 맞추기  2. 알파벳 암호  3. 도형 암호  4. 이진수  5. 넌센스
 // 각 문제: {text, answer, why, hint, options?, accept?}
 //  - options: 선택형 버튼 (앞 두 글자를 뺀 부분이 정답 비교값)
 //  - accept: 정답으로 함께 인정할 다른 표기
@@ -20,16 +20,14 @@ const patternBank = [
  {ask:'다음에 올 색깔은?',seq:'🔴 🔵 🔵 🟡 🔴 🔵 🔵 🟡 🔴 ?',options:['🔴 빨간색','🔵 파란색','🟡 노란색'],answer:'파란색',why:'빨강·파랑·파랑·노랑의 네 가지 순서가 반복됩니다.',hint:'네 개씩 묶어 보세요.'}
 ].map(x=>Q(`[순서 맞추기] ${x.ask}\n${x.seq}`,x.answer,x.why,x.hint,{options:x.options}));
 
-// 2. 논리 추론: 하 = 3명 문제, 중·상 = 4명 문제
-const logicEasy = [
- Q('[논리 추론] 범인은 누구일까?\nA, B, C 중 범인은 한 명이고, 범인만 거짓말을 하고 있어.\nA: "B가 범인이야."\nB: "나는 범인이 아니야."\nC: "A는 범인이 아니야."','B','B가 범인이면 B의 말만 거짓이고 A와 C의 말은 참입니다. A나 C를 범인으로 가정하면 범인이 아닌 사람도 거짓말을 하게 되어 조건에 어긋납니다.','범인만 거짓말한다는 조건으로 한 명씩 범인이라고 가정해 보세요.'),
- Q('[논리 추론] 보물은 어디에?\n보물은 상자 A, B, C 중 하나에 있어. 참인 문장은 딱 한 개야.\nA 상자: "보물은 A에 있어."\nB 상자: "보물은 A에 없어."\nC 상자: "보물은 C에 없어."','C','보물이 C에 있으면 A 상자는 거짓, B 상자만 참, C 상자는 거짓입니다. A나 B에 있다고 가정하면 참인 문장이 두 개가 됩니다.','보물이 각 상자에 있다고 가정해 참인 문장의 개수를 세어 보세요.'),
- Q('[논리 추론] 케이크를 먹은 범인은?\nA, B, C 중 한 명이 케이크를 먹었어. 범인만 거짓말을 하고 있어.\nA: "나는 범인이 아니야."\nB: "A가 범인이야."\nC: "B는 범인이 아니야."','A','A가 범인이면 A의 말만 거짓이고 B와 C의 말은 참입니다. B나 C가 범인이면 다른 사람의 말까지 거짓이 됩니다.','누가 먹었는지 가정한 뒤 거짓말하는 사람이 그 사람뿐인지 확인하세요.')
-];
-const logicHard = [
- Q('[논리 추론] 거짓말쟁이는 한 명뿐, 누굴까?\nA, B, C, D 중 범인은 한 명이야. 네 사람 중 거짓말을 하는 사람은 딱 한 명이야.\nA: "범인은 B 또는 C야."\nB: "나는 범인이 아니야."\nC: "범인은 D야."\nD: "C는 거짓말을 하고 있어."','C','C가 범인이면 A·B·D의 말은 참이고 C의 말만 거짓입니다. 다른 사람이 범인이라고 가정하면 거짓말이 두 개 이상 생깁니다.','C와 D의 말은 서로 반대라는 점을 이용하세요.'),
- Q('[논리 추론] 보물은 어디에?\n보물은 상자 A~D 중 하나에 있어. 참인 문장은 딱 한 개야.\nA 상자: "보물은 B 또는 C에 있어."\nB 상자: "보물은 A에 없어."\nC 상자: "보물은 C에 없어."\nD 상자: "보물은 D에 있어."','A','보물이 A에 있으면 C 상자의 말만 참입니다. B·C·D에 있다고 가정하면 참인 문장이 두 개 이상입니다.','각 상자에 있다고 가정해 네 문장의 참·거짓을 표로 적어 보세요.'),
- Q('[논리 추론] 범인은 누구일까?\nA, B, C, D 중 범인은 한 명이고, 범인만 거짓말을 하고 있어.\nA: "B는 범인이 아니야."\nB: "C는 범인이 아니야."\nC: "A는 범인이 아니야."\nD: "범인은 A, B, C 중 한 명이야."','D','D가 범인이면 A·B·C의 말은 참이고 D의 말만 거짓입니다. A·B·C 중 한 명이 범인이면 범인이 아닌 누군가도 거짓말을 하게 됩니다.','D가 범인이라고 가정하면 다른 사람들의 말을 검증하기 쉬워요.')
+// 2. 알파벳 암호(시저 암호): 하 = 문제 1·2, 중 = 문제 3·4, 상 = 문제 5·6
+const caesarBank = [
+ Q('[알파벳 암호] 원래 단어는?\n암호 DBU는 알파벳을 뒤로 1칸씩 밀어 만든 암호입니다. 원래 단어는 무엇일까요?','CAT','각 글자를 1칸 앞으로 되돌리면 D→C, B→A, U→T 이므로 CAT(고양이)입니다.','각 알파벳을 하나 앞 글자로 바꿔 보세요. (B → A)'),
+ Q('[알파벳 암호] 원래 단어는?\n암호 EPH는 알파벳을 뒤로 1칸씩 밀어 만든 암호입니다. 원래 단어는 무엇일까요?','DOG','각 글자를 1칸 앞으로 되돌리면 E→D, P→O, H→G 이므로 DOG(개)입니다.','각 알파벳을 하나 앞 글자로 바꿔 보세요. (E → D)'),
+ Q('[알파벳 암호] 원래 단어는?\n암호 DPEF는 알파벳을 뒤로 1칸씩 밀어 만든 암호입니다. 원래 단어는 무엇일까요?','CODE','각 글자를 1칸 앞으로 되돌리면 D→C, P→O, E→D, F→E 이므로 CODE(코드)입니다.','각 알파벳을 하나 앞 글자로 바꿔 보세요. 컴퓨터와 관련된 단어예요.'),
+ Q('[알파벳 암호] 원래 단어는?\n암호 EBUB는 알파벳을 뒤로 1칸씩 밀어 만든 암호입니다. 원래 단어는 무엇일까요?','DATA','각 글자를 1칸 앞으로 되돌리면 E→D, B→A, U→T, B→A 이므로 DATA(데이터)입니다.','각 알파벳을 하나 앞 글자로 바꿔 보세요. 정보·자료를 뜻하는 단어예요.'),
+ Q('[알파벳 암호] 원래 단어는?\n암호 JOUFMMJHFODF는 알파벳을 뒤로 1칸씩 밀어 만든 암호입니다. 원래 단어는 무엇일까요?','INTELLIGENCE','각 글자를 1칸 앞으로 되돌리면 J→I, O→N, U→T, F→E, M→L, M→L, J→I, H→G, F→E, O→N, D→C, F→E 이므로 INTELLIGENCE(지능)입니다.','각 알파벳을 하나 앞 글자로 바꿔 보세요. AI의 I가 바로 이 단어예요.'),
+ Q('[알파벳 암호] 원래 단어는?\n암호 TXHVW는 알파벳을 앞으로 3칸씩 밀어 만든 암호입니다. 원래 단어는 무엇일까요?','QUEST','각 글자를 3칸씩 되돌리면 T→Q, X→U, H→E, V→S, W→T 이므로 QUEST(탐구, 탐색)입니다.','각 알파벳을 3칸 앞 글자로 바꿔 보세요. (T → S → R → Q)')
 ];
 
 // 3. 도형 암호: 정답이 모두 실제 영어 단어(4글자)
@@ -83,7 +81,7 @@ const pick=items=>items[Math.floor(Math.random()*items.length)];
 // 난이도 배정: 각 유형은 문제 순서가 곧 난이도 순서(쉬움 → 어려움)입니다.
 const byLevel={
  pattern:{easy:patternBank.slice(0,3),medium:patternBank.slice(3,6),hard:patternBank.slice(6,9)},
- logic:(()=>{const all=[...logicEasy,...logicHard];return {easy:all.slice(0,2),medium:all.slice(2,4),hard:all.slice(4,6)};})(),
+ logic:{easy:caesarBank.slice(0,2),medium:caesarBank.slice(2,4),hard:caesarBank.slice(4,6)},
  shape:shapeBank,
  binary:binaryBank,
  nonsense:{easy:nonsenseBank.slice(0,4),medium:nonsenseBank.slice(4,8),hard:nonsenseBank.slice(8,11)}
@@ -111,7 +109,7 @@ function stopTimer(){if(timer!==null)clearInterval(timer);timer=null;}
 function resetScreen(){screen.classList.remove('intro-panel','result-fail','result-success','shake');}
 
 function menu(){stopTimer();game=null;hud.hidden=true;document.body.classList.remove('playing');resetScreen();
- screen.innerHTML=`<div class="eyebrow">SELECT GAME VERSION</div><h2>도전할 버전을 선택하세요</h2><p class="desc">순서 맞추기·논리 추론·도형 암호·이진수·넌센스 문제가 랜덤으로 5문제 출제됩니다. (하 버전은 이진수 대신 넌센스 2문제) 문제당 100점, 힌트를 쓰면 ${HINT_PENALTY}점이 깎이며 <strong>맞힌 만큼 점수가 쌓입니다</strong>. 오답도 풀이를 확인한 뒤 계속 진행할 수 있어요.</p><div class="levels">${Object.entries(versions).map(([key,v])=>`<button class="level" data-version="${key}"><b>${v.label}</b><div class="stars" aria-label="별 ${v.stars}개">${'★'.repeat(v.stars)}</div><small>5문제 랜덤 출제 · ${v.time?'제한 시간 5분':'시간 제한 없음'} · 문제마다 힌트 1회</small></button>`).join('')}</div>`;
+ screen.innerHTML=`<div class="eyebrow">SELECT GAME VERSION</div><h2>도전할 버전을 선택하세요</h2><p class="desc">순서 맞추기·알파벳 암호·도형 암호·이진수·넌센스 문제가 랜덤으로 5문제 출제됩니다. (하 버전은 이진수 대신 넌센스 2문제) 문제당 100점, 힌트를 쓰면 ${HINT_PENALTY}점이 깎이며 <strong>맞힌 만큼 점수가 쌓입니다</strong>. 오답도 풀이를 확인한 뒤 계속 진행할 수 있어요.</p><div class="levels">${Object.entries(versions).map(([key,v])=>`<button class="level" data-version="${key}"><b>${v.label}</b><div class="stars" aria-label="별 ${v.stars}개">${'★'.repeat(v.stars)}</div><small>5문제 랜덤 출제 · ${v.time?'제한 시간 5분':'시간 제한 없음'} · 문제마다 힌트 1회</small></button>`).join('')}</div>`;
  screen.querySelectorAll('[data-version]').forEach(b=>b.onclick=()=>start(b.dataset.version));}
 
 function start(version){stopTimer();document.body.classList.remove('intro-mode');document.body.classList.add('playing');resetScreen();
@@ -166,7 +164,7 @@ function intro(){
  stopTimer();game=null;hud.hidden=true;document.body.classList.remove('playing');document.body.classList.add('intro-mode');resetScreen();
  screen.classList.add('intro-panel');
  screen.innerHTML=`<div class="intro-top"><span class="intro-step">[ STEP 2 ]</span><span class="intro-status"><span class="pulse-dot"></span> SECURITY ALERT</span></div>
- <div class="intro-frame"><div class="intro-copy"><div class="eyebrow">NEXUS SECURITY LAB · SECURITY CHECK</div><h2>CODE RED :<br>도시를 구하라!</h2><p>해커가 도시 서버에 침투하려고<br class="desktop-break"> 시도하고 있습니다.</p><p>해킹을 막으려면 <em>보안 지식</em>이 필요합니다.<br class="desktop-break"> 지금 여러분의 실력을 점검해 봅시다.</p><div class="intro-note">[ 점검 항목: 순서 맞추기 · 논리 추론 · 도형 암호 · 이진수 · 넌센스 ]</div></div>
+ <div class="intro-frame"><div class="intro-copy"><div class="eyebrow">NEXUS SECURITY LAB · SECURITY CHECK</div><h2>CODE RED :<br>도시를 구하라!</h2><p>해커가 도시 서버에 침투하려고<br class="desktop-break"> 시도하고 있습니다.</p><p>해킹을 막으려면 <em>보안 지식</em>이 필요합니다.<br class="desktop-break"> 지금 여러분의 실력을 점검해 봅시다.</p><div class="intro-note">[ 점검 항목: 순서 맞추기 · 알파벳 암호 · 도형 암호 · 이진수 · 넌센스 ]</div></div>
  <div class="intro-globe" aria-hidden="true"><svg viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="150" cy="150" r="116" stroke="currentColor" stroke-width="4"/><ellipse cx="150" cy="150" rx="49" ry="116" stroke="currentColor" stroke-width="3"/><ellipse cx="150" cy="150" rx="116" ry="43" stroke="currentColor" stroke-width="3"/><path d="M34 150H266M150 34V266" stroke="currentColor" stroke-width="3"/><path d="M62 81l28-18 18 10 5 19 29 10-12 19-26 4-9 26-20-11-21-27zm104 35 21-23 33 5 20 25-13 22-31 6-11 29-22-19zm-54 53 25 11 16 33-17 35-22-9-9-39z" fill="currentColor" opacity=".8"/><path d="M149 45V18" stroke="#ff5569" stroke-width="4"/><path d="M150 0c-17 0-29 12-29 29 0 22 29 48 29 48s29-26 29-48c0-17-12-29-29-29z" fill="#ff425c"/><circle cx="150" cy="28" r="9" fill="#092739"/><path d="M191 17l-4 23h-9l4-23zm-10 29h9v9h-9" fill="#ff425c"/></svg><div class="globe-scan"></div></div>
  <div class="intro-bottom"><div class="intro-symbols"><span class="intro-lock">▣</span><span class="intro-key">⚿</span></div><button class="intro-enter" id="enterLab">점검 시작 <span>→</span></button></div></div>
  <div class="intro-foot">WARNING · HACKING ATTEMPT DETECTED · SECURITY CHECK REQUIRED</div>`;
